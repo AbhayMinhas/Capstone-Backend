@@ -1,7 +1,17 @@
-const express = require("express");
-const { connectDB } = require("./config/database");
+import express from "express";
+import  connectDB  from "./config/database.js"
 const app = express();
-require("dotenv").config();
+import 'dotenv/config'; 
+import router from "./routes/index.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
+
+app.use(express.json());
+
+app.use("/api",router);
+
+app.use(errorHandler);
+
+
 
 
 
