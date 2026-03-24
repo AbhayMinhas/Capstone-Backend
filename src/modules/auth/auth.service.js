@@ -44,12 +44,13 @@ export const registerUser = async (data) => {
   }
 };
 
-export const loginUser = async (data)=>{
-  const {email,password}=data;
-  const user = await User.findOne({email}).select("+password");
+export const loginUser = async (data) => {
+  const { email, password } = data;
 
-  if(!user){
-    throw{
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    throw {
       statusCode: 400,
       message: "Invalid credentials",
     };
@@ -57,20 +58,20 @@ export const loginUser = async (data)=>{
 
   const isPasswordValid = await user.validatePassword(password);
 
-  if(!isPasswordValid){
+  if (!isPasswordValid) {
     throw {
-      statusCode:400,
-      message:"Invalid credentials",
+      statusCode: 400,
+      message: "Invalid credentials",
     };
   }
 
   const token = generateToken(user._id);
 
-  const safeUser=user.toObject();
+  const safeUser = user.toObject();
   delete safeUser.password;
 
   return {
-    user:safeUser,
+    user: safeUser,
     token,
   };
 };
