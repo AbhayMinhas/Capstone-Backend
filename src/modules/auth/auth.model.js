@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 6,
-      select:false,
+      select: false,
       validate(value) {
         if (
           !validator.isStrongPassword(value, {
@@ -90,11 +90,24 @@ const userSchema = new mongoose.Schema(
             trim: true,
             maxLength: 20,
             validate(value) {
-              if(!value)return true;
+              if (!value) return true;
               if (
                 !validator.isMobilePhone(value, undefined, { strictMode: true })
               ) {
                 throw new Error("Invalid phone number");
+              }
+            },
+          },
+          email: {
+            type: String,
+            required: true,
+            lowercase: true,
+            trim: true,
+            validate(value) {
+              if (!validator.isEmail(value)) {
+                throw new Error(
+                  "Invalid emergency Contact email address: " + value,
+                );
               }
             },
           },
@@ -104,8 +117,6 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
-
 
 userSchema.methods.validatePassword = async function (inputPassword) {
   const user = this;

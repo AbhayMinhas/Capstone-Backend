@@ -23,7 +23,8 @@ export const updateProfileSchema = Joi.object({
         Joi.object({
           name: Joi.string().trim().min(2).max(100).required(),
           phone: Joi.string().required(),
-        }),
+          email: Joi.string().email().lowercase().trim().required(),
+        }).unknown(false),
       )
       .optional(),
   }).optional(),

@@ -40,9 +40,45 @@ export const updateUserProfile = async (user, updateData) => {
 
   Object.keys(filteredData).forEach((key) => {
     if (key === "safetyProfile") {
+      // user.safetyProfile = {
+      //   ...user.safetyProfile,
+      //   ...filteredData.safetyProfile,
+      //   emergencyContacts: [
+      //     ...(user.safetyProfile.emergencyContacts || []),
+      //     ...(filteredData.safetyProfile.emergencyContacts || []),
+      //   ],
+      // };
+
+      const existingContacts = user.safetyProfile?.emergencyContacts || [];
+
+      const incomingContacts =
+        filteredData.safetyProfile?.emergencyContacts || [];
+
+      const contactMap = new Map();
+
+      existingContacts.forEach((contact) => {
+        const key = `${contact.phone}-${contact.email?.toLowerCase()}`;
+        contactMap.set(key, contact);
+      });
+
+      incomingContacts.forEach((contact) => {
+        const key = `${contact.phone}-${contact.email?.toLowerCase()}`;
+
+        if (contactMap.has(key)) {
+          contactMap.set(key, {
+            ...contactMap.get(key),
+            ...contact,
+          });
+        } else {
+          contactMap.set(key, contact);
+        }
+      });
+      const mergedContacts = Array.from(contactMap.values());
+
       user.safetyProfile = {
         ...user.safetyProfile,
         ...filteredData.safetyProfile,
+        emergencyContacts: mergedContacts,
       };
     } else {
       user[key] = filteredData[key];
