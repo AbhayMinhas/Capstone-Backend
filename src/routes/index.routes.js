@@ -5,10 +5,12 @@ import emergencyRouter from "../modules/emergencies/emergency.routes.js";
 
 const router = express.Router();
 
-//mount module routes
 router.use("/auth", authRouter);
 router.use("/user", userRouter);
 router.use("/emergency", emergencyRouter);
+router.get("/map", (req, res) => {
+  res.render("map");
+});
 
 router.get("/health", (req, res) => {
   res.json({ success: true, message: "OK" });

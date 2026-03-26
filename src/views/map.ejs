@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Live Location</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        const map = L.map("map").setView([0, 0], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "Indian Tourist Safety",
+        }).addTo(map);
+
+        const marker = L.marker([0, 0]).addTo(map);
+
+        //Get live location
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    console.log("Location:", lat, lng);
+
+                    // update marker
+                    //marker moves live
+                    marker.setLatLng([lat, lng]);
+
+                    // move map
+                    //camera follows user
+                    map.setView([lat, lng], 15);
+                },
+                (error) => {
+                    console.error(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000,
+                }
+            );
+        } else {
+            alert("Geolocation not supported");
+        }
+    </script>
+
+</body>
+
+</html>
