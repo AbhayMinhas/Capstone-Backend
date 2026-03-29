@@ -39,7 +39,7 @@ export const saveLocationIfNeeded = async ({ userId, lat, lng }) => {
   lastSaved.set(userId, { lat, lng, timestamp: now });
 };
 
-const saveLocation = async (userId, lat, lng) => {
+export const saveLocation = async (userId, lat, lng) => {
   await Location.create({
     user: userId,
     location: {
@@ -47,4 +47,50 @@ const saveLocation = async (userId, lat, lng) => {
       coordinates: [lng, lat], //geoJson
     },
   });
+};
+
+export const fetchNearbyUsers = async ({ userId, lat, lng }) => {
+  // console.log("fetching nearby users");
+  const nearby = await Location.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: [lng, lat],
+        },
+        distanceField: "distance",
+        maxDistance: 100, // 🔥 100 meters
+        spherical: true,
+      },
+    },
+    {
+      $sort: { createdAt: -1 },
+    },
+    {
+      $group: {
+        _id: "$user",
+        location: { $first: "$location" },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "_id",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    {
+      $unwind: "$user",
+    },
+    {
+      $project: {
+        userId: "$_id",
+        name: "$user.firstName",
+        coordinates: "$location.coordinates",
+      },
+    },
+  ]);
+
+  return nearby.filter((u) => u.userId.toString() !== userId.toString());
 };

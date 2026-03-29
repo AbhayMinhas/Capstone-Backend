@@ -61,24 +61,24 @@ export const createSOS = async (user, data) => {
   let longitude = 77.209;
 
   // real-time location(memory)
-  const cached= userLocations.get(user._id.toString());
-  if(cached){
-    latitude=cached.latitude;
-    longitude=cached.longitude;
-  }
-  else{
-    const lastLocation = await Location.findOne({user:user._id}).sort({createdAt:-1});
+  const cached = userLocations.get(user._id.toString());
+  if (cached) {
+    latitude = cached.latitude;
+    longitude = cached.longitude;
+    saveLocation(user._id, latitude, longitude);
+  } else {
+    const lastLocation = await Location.findOne({ user: user._id }).sort({
+      createdAt: -1,
+    });
 
-    if(lastLocation){
+    if (lastLocation) {
       longitude = lastLocation.location.coordinates[0];
-      latitude=lastLocation.location.coordinates[1];
-
-    }
-    else{
+      latitude = lastLocation.location.coordinates[1];
+    } else {
       throw {
         statusCode: 400,
-        message:"User location not available",
-      }
+        message: "User location not available",
+      };
     }
   }
   const message =

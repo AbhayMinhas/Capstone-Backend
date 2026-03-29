@@ -12,6 +12,16 @@
             height: 100vh;
             width: 100%;
         }
+
+        .my-label {
+            background-color: transparent;
+            border: transparent;
+            box-shadow: none;
+            font-weight: bold;
+            color: black;
+            /* Adjust offset here if 'direction: top' isn't perfect */
+            transform: translateY(-20px);
+        }
     </style>
 </head>
 
@@ -40,6 +50,7 @@
 
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
         }
+
         const map = L.map("map").setView([0, 0], 15);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -49,6 +60,14 @@
         const marker = L.marker([0, 0]).addTo(map);
 
         const token = "<%=token%>";
+        const userName = "<%=user%>";
+
+        marker.bindTooltip(`${userName} (you)`, {
+            permanent: true,
+            direction: 'top',
+            className: "my-label"
+        }).openTooltip();
+
         const socket = io("http://localhost:7000", {
             auth: {
                 token: token
@@ -60,7 +79,7 @@
         socket.on("connect_error", (err) => {
             console.error("Socket connection error:", err.message);
         });
-     
+
 
         let lastPosition = null;
 
@@ -96,7 +115,7 @@
                             lng
                         );
                         // if(distance<20) return;//skip small movement
-                        if (distance > 2) {
+                        if (distance > 1) {
                             socket.emit("send-location", {
                                 latitude: lat,
                                 longitude: lng,
@@ -124,6 +143,54 @@
         } else {
             alert("Geolocation not supported");
         }
+
+        const markers = new Map();
+
+        function updateNearbyMarkers(users) {
+            users.forEach(user => {
+                const [lng, lat] = user.coordinates;
+
+                if (markers.has(user.userId)) {
+                    markers.get(user.userId).setLatLng([lat, lng]);
+                } else {
+                    const marker = L.marker([lat, lng], {
+                        icon: L.icon({
+                            iconUrl: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+                            iconSize: [32, 32],
+                        })
+                    }).addTo(map);
+
+                    marker.bindTooltip(user.name,{
+                        permanent:true,
+                        direction:'top',
+                        className:"my-label"
+                    });
+                   markers.set(user.userId,marker); 
+                }
+            });
+        }
+
+        setInterval(async()=>{
+            if(!lastPosition) return;
+
+            try{
+                const res = await fetch(
+                    `/api/locations/nearby?lat=${lastPosition.lat}&lng=${lastPosition.lng}`,{
+                        header:{
+                            authoriztion: `Bearer ${token}`,
+                        },
+                    }
+                );
+                // console.log(res);
+                const data = await res.json();
+                if(data.success){
+                    updateNearbyMarkers(data.data);
+                }
+            }catch(error){
+                console.error("Nearby fetch error:",err);
+            }
+        },5000);
+
     </script>
 
 </body>

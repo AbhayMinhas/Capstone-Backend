@@ -5,7 +5,10 @@ import "dotenv/config";
 import router from "./routes/index.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { verifyEmailConnection } from "./utils/email.service.js";
-import { saveLocationIfNeeded } from "./modules/locations/location.service.js";
+import {
+  saveLocation,
+  saveLocationIfNeeded,
+} from "./modules/locations/location.service.js";
 import User from "./modules/auth/auth.model.js";
 import jwt from "jsonwebtoken";
 
@@ -31,7 +34,6 @@ app.use(express.json());
 
 io.use(async (socket, next) => {
   try {
-    console.log(socket.handshake.auth?.token);
     const token =
       socket.handshake.auth?.token ||
       socket.handshake.headers?.authorization?.split(" ")[1];
@@ -42,7 +44,7 @@ io.use(async (socket, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded._id).select("_id");
+    const user = await User.findById(decoded._id).select("_id firstName");
 
     if (!user) {
       return next(new Error("User not found"));
@@ -57,7 +59,10 @@ io.use(async (socket, next) => {
 
 import { userLocations } from "./utils/locationCache.js";
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id, "User: ", socket.user._id);
+  const userId = socket.user._id.toString();
+  const userName = socket.user.firstName;
+
+  console.log("User connected:", socket.id, "User: ", userName);
 
   socket.on("send-location", async (data) => {
     try {
@@ -70,6 +75,8 @@ io.on("connection", (socket) => {
       userLocations.set(userId, {
         latitude,
         longitude,
+        name: userName,
+        socketId: socket.id,
         timestamp: Date.now(),
       });
 
@@ -99,11 +106,7 @@ io.on("connection", (socket) => {
     const last = userLocations.get(userId);
 
     if (last) {
-      await saveLocationIfNeeded({
-        userId,
-        lat: last.latitude,
-        lng: last.longitude,
-      });
+      await saveLocation(userId, last.latitude, last.longitude);
     }
     console.log("User disconnected: ", socket.id);
   });
