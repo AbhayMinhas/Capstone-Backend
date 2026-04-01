@@ -1,4 +1,3 @@
-﻿# Capstone-Backend
 # Smart Tourist Safety Monitoring & Incident Response System (Backend)
 
 ## Overview
