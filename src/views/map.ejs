@@ -219,12 +219,29 @@
             /* Adjust offset here if 'direction: top' isn't perfect */
             transform: translateY(-20px);
         }
+
+        #toggle-layer-btn {
+            position: fixed;
+            margin: 20px;
+
+            bottom: 20px;
+            left: 20px;
+            z-index: 99999;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
 
-    <div id="map"></div>
+    <div id="map">
+        <button id="toggle-layer-btn">Show Heatmap</button>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -237,21 +254,12 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
     <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
-    <script>
-        function setLoading(button,isLoading){
-            const text = button.querySelector(".btn-text");
-            const loader = button.querySelector(".btn-loader");
 
-            if(isLoading){
-                button.disabled = true;
-                text.style.display="none";
-                loader.classList.remove("hidden");
-            }else{
-                button.disable=false;
-                text.style.display = "inline";
-                loader.classList.add("hidden");
-            }
-        }
+
+    <script type="module">
+        
+        
+        
         function animateMarker(marker) {
             setTimeout(() => {
                 const el = marker.getElement();
@@ -293,6 +301,10 @@
                 iconSize: [32, 32],
             });
         }
+
+        import { initMapActions } from "/js/map-actions.js";
+        import { openIncidentForm } from "/js/incident-form.js";
+        import { renderHeatmap, toggleHeatmap } from "/js/heatmap.js";
         const map = L.map("map").setView([0, 0], 15);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -441,6 +453,9 @@
         let previousSignature = "";
 
         const incidentMarkers = [];
+        const layerState = {
+            isHeatmapVisible: false,
+        };
 
         async function fetchIncidents() {
             if (!lastPosition) return;
@@ -457,6 +472,7 @@
                     if (newSignature !== previousSignature) {
                         previousSignature = newSignature;
                         renderIncidents(data.data);
+                        renderHeatmap(map, data.data, layerState.isHeatmapVisible);
                     }
                     // else{
                     //     console.log("no change no render in incidents")
@@ -467,6 +483,8 @@
                 console.log(err);
             }
         }
+
+
         const clusterGroup = L.markerClusterGroup({
             disableClusteringAtZoom: 16,
             maxClusterRadius: 30,
@@ -514,7 +532,23 @@
         setInterval(fetchIncidents, 10000);
 
 
+        initMapActions(map, token,clusterGroup,getIncidentIcon,animateMarker);
 
+
+        document.getElementById("toggle-layer-btn").onclick = () => {
+            layerState.isHeatmapVisible = !layerState.isHeatmapVisible;
+
+            toggleHeatmap(map, clusterGroup, layerState);
+
+            document.getElementById("toggle-layer-btn").innerText =
+                layerState.isHeatmapVisible ? "Show Markers" : "Show Heatmap";
+
+            // showToast(
+            //     layerState.isHeatmapVisible
+            //         ? "Heatmap enabled"
+            //         : "Markers enabled"
+            // );
+        };
 
 
     </script>
@@ -525,10 +559,7 @@
     <script type="module">
 
 
-        import { initMapActions } from "/js/map-actions.js";
-        import { openIncidentForm } from "/js/incident-form.js";
-
-        initMapActions(map, token);
+        
     </script>
 
 </body>

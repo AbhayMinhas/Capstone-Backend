@@ -1,6 +1,12 @@
 import { openIncidentForm } from "./incident-form.js";
 
-export function initMapActions(map, token) {
+export function initMapActions(
+  map,
+  token,
+  clusterGroup,
+  getIncidentIcon,
+  animateMarker,
+) {
   let currentPopup = null;
   map.on("click", (e) => {
     const { lat, lng } = e.latlng;
@@ -31,7 +37,7 @@ export function initMapActions(map, token) {
     //   }
     // }, 0);
 
-    window.__clickedLatlng={lat,lng};
+    window.__clickedLatlng = { lat, lng };
     //store current coordinates golbally
   });
   //using event delegation instead of getelementbyid
@@ -47,12 +53,12 @@ export function initMapActions(map, token) {
   document.addEventListener("click", function (e) {
     if (e.target && e.target.id === "report-incident-btn") {
       const { lat, lng } = window.__clickedLatlng;
-      openIncidentForm(map, lat, lng, token);
+      openIncidentForm(map, lat, lng, token,clusterGroup,getIncidentIcon,animateMarker);
     }
   });
 }
 
-//bug due to 
+//bug due to
 //popup DOM recreated every click
 //event binding lost
 //timting mismatch

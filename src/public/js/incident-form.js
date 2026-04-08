@@ -1,6 +1,40 @@
 let isIncidentHandlerAttached = false;
 
-export function openIncidentForm(map, lat, lng, token) {
+export function openIncidentForm(map, lat, lng, token,clusterGroup, getIncidentIcon,animateMarker) {
+  function setLoading(button, isLoading) {
+    const text = button.querySelector(".btn-text");
+    const loader = button.querySelector(".btn-loader");
+
+    if (isLoading) {
+      button.disabled = true;
+      text.style.display = "none";
+      loader.classList.remove("hidden");
+    } else {
+      button.disabled = false;
+      text.style.display = "inline";
+      loader.classList.add("hidden");
+    }
+  }
+
+  function showToast(message, type = "success") {
+    const container = document.getElementById("toast-container");
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    // trigger animation
+    setTimeout(() => toast.classList.add("show"), 10);
+
+    // remove after 3s
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
+  }
+
   console.log("incidentformOpen");
   window.__clickedLatLng = { lat, lng };
   const formHtml = `
@@ -27,25 +61,6 @@ export function openIncidentForm(map, lat, lng, token) {
         <span class="btn-loader hidden"></span>
     </button>
 </div>`;
-
-  function showToast(message, type = "success") {
-    const container = document.getElementById("toast-container");
-
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`;
-    toast.innerText = message;
-
-    container.appendChild(toast);
-
-    // trigger animation
-    setTimeout(() => toast.classList.add("show"), 10);
-
-    // remove after 3s
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => container.removeChild(toast), 300);
-    }, 3000);
-  }
   const popup = L.popup({ minWidth: 400, maxHeight: 700 })
     .setLatLng([lat, lng])
     .setContent(formHtml)
@@ -61,11 +76,12 @@ export function openIncidentForm(map, lat, lng, token) {
         const type = document.getElementById("incident-type")?.value;
         const description = document.getElementById("incident-desc")?.value;
 
-        if (!type){ 
-          showToast("type is required","error");
-          return;}
+        if (!type) {
+          showToast("type is required", "error");
+          return;
+        }
 
-        setLoading(button,true);
+        setLoading(button, true);
 
         const processingMarker = L.marker([lat, lng], {
           icon: getIncidentIcon(type),
@@ -110,8 +126,8 @@ export function openIncidentForm(map, lat, lng, token) {
           console.error(err);
           clusterGroup.removeLayer(processingMarker);
           showToast("Failed to report incident", "error");
-        }finally{
-          setLoading(button,false);
+        } finally {
+          setLoading(button, false);
         }
       }
     });
