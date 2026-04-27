@@ -437,8 +437,8 @@
             try {
                 const res = await fetch(
                     `/api/locations/nearby?lat=${lastPosition.lat}&lng=${lastPosition.lng}`, {
-                    header: {
-                        authoriztion: `Bearer ${token}`,
+                    headers: {
+                        authorization: `Bearer ${token}`,
                     },
                 }
                 );
@@ -469,7 +469,7 @@
             try {
                 const res = await fetch(`/api/incidents/nearby?lat=${lastPosition.lat}&lng=${lastPosition.lng}`, {
                     headers: {
-                        authoriztion: `Bearer ${token}`,
+                        authorization: `Bearer ${token}`,
                     },
                 });
                 const data = await res.json();
