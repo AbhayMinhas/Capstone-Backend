@@ -16,7 +16,7 @@ The system is designed with a **clean modular architecture**, scalability, and r
 
 ## Tech Stack
 
-* Node.js
+* Node.js(use version v22.18.0 ,with the help of nvm to avoid any problem while running the project)
 * Express.js
 * MongoDB + Mongoose
 * Socket.IO (real-time communication)
